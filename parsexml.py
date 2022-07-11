@@ -89,16 +89,14 @@ def xmltosql():
   # Delete and create table
   cur.execute('''DROP TABLE if exists books''')
   cur.execute('''CREATE TABLE books
-               (book_id text, author text, title text, genre text, price text, publish_date text, description text)''')
+               (book_id text, author text, title text, genre text, price real, publish_date text, description text)''')
 
   # Insert a row of data by iterating through listofvaluelists and nested lists
-  for list in listofvaluelists:
-    for element in list:
-      print(list)
-      print(element)
-      print(type(element))
-      #cur.execute("INSERT INTO books (book_id, author, title, genre, price, publish_date, description) VALUES (?, ?, ?, ?, ?, ?, ?)"), (element) 
-      cur.execute("INSERT INTO books VALUES ('test','test','test','test',35.14, 'test', 'test')")
+  for element in listofvaluelists:
+    print(element)
+    elementtuple = tuple(element)
+    query = 'INSERT INTO books VALUES {};'.format(elementtuple)
+    cur.execute(query)
 
   # Save (commit) the changes
   con.commit()
