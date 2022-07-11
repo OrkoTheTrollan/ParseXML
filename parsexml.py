@@ -9,7 +9,7 @@ import PySimpleGUI as sg
 import base64
 import sqlite3
 
-# Fix Bug on Windows when using multiple screens with different scaling
+#Fix Bug on Windows when using multiple screens with different scaling
 def make_dpi_aware():
     if platform.system() == 'Windows' and int(platform.release()) >= 8: 
         ctypes.windll.shcore.SetProcessDpiAwareness(True)
@@ -22,8 +22,8 @@ def getXML():
   myroot = mytree.getroot()
   return myroot, mytree
 
-#iterates through the root and the childs of the file
-#stores tags in taglist for the columns of the table and values in valuelist for the rows
+#Iterate through the root and the childs of the file
+#Store tags in taglist for the columns of the table and values in valuelist for the rows
 def parseXML():
   global listofvaluelists
   listofvaluelists = []
@@ -39,7 +39,7 @@ def parseXML():
         valuelist.append (child.text)
         taglist.append (child.tag)
       else: 
-        #combines tag and attrib for column name
+        #Combine tag and attrib for column name
         for j in child.attrib :
           print(j, child.attrib[j])
           valuelist.append (child.attrib[j])
@@ -53,7 +53,8 @@ def parseXML():
         getdata()
 
     i = i+1
-    #removes linebreaks and unnecessary spaces from valuelist
+    
+    #Remove linebreaks and unnecessary spaces from valuelist
     temp = []
     for x in valuelist:
       temp.append(x.replace("\n", ""))
@@ -64,20 +65,47 @@ def parseXML():
     valuelist = temp  
     listofvaluelists.append(valuelist)
 
-  #changes doubles in taglist to avoid identical names in the table columns
+  #Change doubles in taglist to avoid identical names in the table columns
   for k in range(len(taglist)):
     for l in range(k + 1, len(taglist)):
         if taglist[k] == taglist[l]:
-          taglist[l] = taglist[l]+'_2'
           taglist[k] = taglist[k]+'_1'
+          taglist[l] = taglist[l]+'_2'
+          
 
-  # print lines for testing purposes
+  # Print lines for testing purposes
   print(taglist)
   print()
   print(valuelist)
   print()
   print(listofvaluelists)
   return taglist, valuelist, listofvaluelists
+
+# Create SQL-database and inserts xml-values in a table; unfortunately no use of dynamic SQL, so table names and column names need to be static
+def xmltosql():
+  con = sqlite3.connect('data/xml.db')
+  cur = con.cursor()
+  
+  # Delete and create table
+  cur.execute('''DROP TABLE if exists books''')
+  cur.execute('''CREATE TABLE books
+               (book_id text, author text, title text, genre text, price text, publish_date text, description text)''')
+
+  # Insert a row of data by iterating through listofvaluelists and nested lists
+  for list in listofvaluelists:
+    for element in list:
+      print(list)
+      print(element)
+      print(type(element))
+      #cur.execute("INSERT INTO books (book_id, author, title, genre, price, publish_date, description) VALUES (?, ?, ?, ?, ?, ?, ?)"), (element) 
+      cur.execute("INSERT INTO books VALUES ('test','test','test','test',35.14, 'test', 'test')")
+
+  # Save (commit) the changes
+  con.commit()
+
+  # Close connection
+  con.close()
+
     
 # creates window with table 
 def make_window(theme=None):
@@ -93,6 +121,7 @@ def make_window(theme=None):
 def main():
   getXML()
   parseXML()
+  xmltosql()
   window = make_window()
 
   while True:
