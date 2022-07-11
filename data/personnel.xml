@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<personnel>
+	<employee id="1">
+		<firstName>Kim</firstName>
+		<lastName>Al</lastName>
+		<age>38</age>
+		<salary>3800</salary>
+		<education graduation="true" />
+		<address id="1">
+			<street>Musterstr.</street>
+			<houseNr>20</houseNr>
+			<city>Mustercity</city>
+			<postalCode>12345</postalCode>
+		</address>
+	</employee>
+	<employee id="2">
+		<firstName>Mark</firstName>
+		<lastName>Quin</lastName>
+		<age>50</age>
+		<salary>6000</salary>
+		<education graduation="false" />
+		<address id="3">
+			<street>Musterstr.</street>
+			<houseNr>50</houseNr>
+			<city>Mustercity</city>
+			<postalCode>12345</postalCode>
+		</address>
+	</employee>
+</personnel>
