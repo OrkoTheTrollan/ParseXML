@@ -91,7 +91,7 @@ def xmltosql():
   cur.execute('''CREATE TABLE books
                (book_id text, author text, title text, genre text, price real, publish_date text, description text)''')
 
-  # Insert a row of data by iterating through listofvaluelists and nested lists
+  # Insert a row of data by iterating through listofvaluelists and converting elements to a tuple
   for element in listofvaluelists:
     print(element)
     elementtuple = tuple(element)
