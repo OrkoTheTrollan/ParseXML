@@ -5,7 +5,6 @@ GUI depends on pysimplegui (https://pysimplegui.readthedocs.io).
 To install pysimplegui run 'pip3 install pysimplegui' in Terminal or CMD.
 """
 
-from ast import Try
 import ctypes
 import platform
 from tkinter import CENTER, LEFT
@@ -22,8 +21,9 @@ def make_dpi_aware():
 #Iterate through the root and the childs of the file
 #Store tags in taglist for the columns of the table and values in valuelist for the rows
 def parseXML():
-  try:
+    
     mytree = ET.parse(xmldata)
+
     myroot = mytree.getroot()
   
     global listofvaluelists
@@ -80,11 +80,7 @@ def parseXML():
     print()
     print(listofvaluelists)
     return taglist, valuelist, listofvaluelists
-
-  except:
-    error_window()
-    get_xml_file_window()
-    print("No XML-File")
+    
 
 # Create SQL-database and inserts xml-values in a table; unfortunately no use of dynamic SQL, so table names and column names need to be static
 def xmltosql():
@@ -111,10 +107,9 @@ def xmltosql():
 
 def error_window():
 
-    layout = [[sg.Text('No valid XML-file')],
-              [sg.OK()]]
+    layout = [[sg.Text('No valid XML-file', justification=CENTER),], [sg.OK(),]]
 
-    window = sg.Window('Error', layout, size = (300,300))
+    window = sg.Window('Error', layout, size = (500,90))
     event, values = window.read()
     window.close()
 
@@ -135,14 +130,22 @@ def get_xml_file_window():
         elif event == 'Show as table':
             global xmldata
             xmldata = (values['-IN-'])
+            try:
+              mytree = ET.parse(xmldata)
+            except:
+              error_window()
+              return
             parseXML()
-            table_window()
-        elif event == 'Export to SQL-DB':
+            table_window()  
+        elif event == 'Export to SQL-DB':   
             xmldata = (values['-IN-'])
+            try:
+              mytree = ET.parse(xmldata)
+            except:
+              error_window()
+              return
             parseXML()
             xmltosql()
-
-        window1.close()
 
 # creates window with table 
 def table_window(theme=None):
@@ -161,8 +164,7 @@ def table_window(theme=None):
 
 def main():
   get_xml_file_window()
-  #xmltosql()
- 
+
 main()  
 
 
