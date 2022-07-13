@@ -1,6 +1,8 @@
 """Simple parser for xml-files based on 'The ElementTree XML API'. Gets the data from a xml-File and prints it out as a GUI-table.
-   GUI depends on pysimplegui (https://pysimplegui.readthedocs.io). So in Terminal or CMD run: 'pip3 install pysimplegui' before using the program."""
+   GUI depends on pysimplegui (https://pysimplegui.readthedocs.io) or exports it to SQLite-database. 
+   To install pysimplegui run 'pip3 install pysimplegui' in Terminal or CMD."""
 
+from ast import Try
 import ctypes
 import platform
 from tkinter import CENTER, LEFT
@@ -14,72 +16,72 @@ def make_dpi_aware():
     if platform.system() == 'Windows' and int(platform.release()) >= 8: 
         ctypes.windll.shcore.SetProcessDpiAwareness(True)
 
-#gets the xml file
-def getXML():
-  global mytree
-  mytree = ET.parse('data/books.xml')
-  global myroot
-  myroot = mytree.getroot()
-  return myroot, mytree
-
 #Iterate through the root and the childs of the file
 #Store tags in taglist for the columns of the table and values in valuelist for the rows
 def parseXML():
-  global listofvaluelists
-  listofvaluelists = []
-  i = 0
+  try:
+    mytree = ET.parse(xmldata)
+    myroot = mytree.getroot()
+  
+    global listofvaluelists
+    listofvaluelists = []
+    i = 0
 
-  for child in myroot:
-    global taglist
-    taglist = []
-    valuelist = []
-    def getdata():
-      print(child.tag, child.attrib, child.text)
-      if child.attrib == {}:
-        valuelist.append (child.text)
-        taglist.append (child.tag)
-      else: 
-        #Combine tag and attrib for column name
-        for j in child.attrib :
-          print(j, child.attrib[j])
-          valuelist.append (child.attrib[j])
-          taglist.append (child.tag + '_' + j)
-    getdata()
-
-    for child in myroot[i]:
+    for child in myroot:
+      global taglist
+      taglist = []
+      valuelist = []
+      def getdata():
+        print(child.tag, child.attrib, child.text)
+        if child.attrib == {}:
+          valuelist.append (child.text)
+          taglist.append (child.tag)
+        else: 
+          #Combine tag and attrib for column name
+          for j in child.attrib :
+            print(j, child.attrib[j])
+            valuelist.append (child.attrib[j])
+            taglist.append (child.tag + '_' + j)
       getdata()
 
-      for child in child:
+      for child in myroot[i]:
         getdata()
 
-    i = i+1
-    
-    #Remove linebreaks and unnecessary spaces from valuelist
-    temp = []
-    for x in valuelist:
-      temp.append(x.replace("\n", ""))
-    valuelist = temp  
-    temp = []
-    for y in valuelist:
-      temp.append(y.replace("  ", ""))
-    valuelist = temp  
-    listofvaluelists.append(valuelist)
+        for child in child:
+          getdata()
 
-  #Change doubles in taglist to avoid identical names in the table columns
-  for k in range(len(taglist)):
-    for l in range(k + 1, len(taglist)):
-        if taglist[k] == taglist[l]:
-          taglist[k] = taglist[k]+'_1'
-          taglist[l] = taglist[l]+'_2'
-          
+      i = i+1
+      
+      #Remove linebreaks and unnecessary spaces from valuelist
+      temp = []
+      for x in valuelist:
+        temp.append(x.replace("\n", ""))
+      valuelist = temp  
+      temp = []
+      for y in valuelist:
+        temp.append(y.replace("  ", ""))
+      valuelist = temp  
+      listofvaluelists.append(valuelist)
 
-  # Print lines for testing purposes
-  print(taglist)
-  print()
-  print(valuelist)
-  print()
-  print(listofvaluelists)
-  return taglist, valuelist, listofvaluelists
+    #Change doubles in taglist to avoid identical names in the table columns
+    for k in range(len(taglist)):
+      for l in range(k + 1, len(taglist)):
+          if taglist[k] == taglist[l]:
+            taglist[k] = taglist[k]+'_1'
+            taglist[l] = taglist[l]+'_2'
+            
+    # Print lines for testing purposes
+    print(taglist)
+    print()
+    print(valuelist)
+    print()
+    print(listofvaluelists)
+    return taglist, valuelist, listofvaluelists
+
+  except:
+    error_window()
+    get_xml_file_window()
+    print("No XML-File")
 
 # Create SQL-database and inserts xml-values in a table; unfortunately no use of dynamic SQL, so table names and column names need to be static
 def xmltosql():
@@ -104,30 +106,60 @@ def xmltosql():
   # Close connection
   con.close()
 
-    
+def error_window():
+
+    layout = [[sg.Text('No valid XML-file')],
+              [sg.OK()]]
+
+    window = sg.Window('Error', layout, size = (300,300))
+    event, values = window.read()
+    window.close()
+
+
+def get_xml_file_window():
+    make_dpi_aware()
+    sg.set_global_icon(icon = 'settings/xml.ico') if platform.system() == 'Windows' else sg.set_global_icon(base64.b64encode(open('settings/xml.png', 'rb').read())) 
+    layout = [[sg.Text('Enter a filename:')],
+              [sg.Input(key='-IN-'), sg.FileBrowse()],
+              [sg.B('Show as table'), sg.B('Export to SQL-DB'), sg.B('Exit', key='Exit')]]
+
+    window1 = sg.Window('Get XML File', layout)
+
+    while True:
+        event, values = window1.read()
+        if event in (sg.WINDOW_CLOSED, 'Exit'):
+            break
+        elif event == 'Show as table':
+            global xmldata
+            xmldata = (values['-IN-'])
+            parseXML()
+            table_window()
+        elif event == 'Export to SQL-DB':
+            xmldata = (values['-IN-'])
+            parseXML()
+            xmltosql()
+
+        window1.close()
+
 # creates window with table 
-def make_window(theme=None):
+def table_window(theme=None):
     make_dpi_aware()
     rows = len(listofvaluelists)
     sg.theme(theme)
     sg.set_global_icon(icon = 'settings/xml.ico') if platform.system() == 'Windows' else sg.set_global_icon(base64.b64encode(open('settings/xml.png', 'rb').read())) 
     layout = [[sg.Table(listofvaluelists, taglist, num_rows=rows, justification=LEFT, expand_x=True, expand_y=True)]]
-    window = sg.Window('Table of XML-Input', layout, finalize=True, right_click_menu=sg.MENU_RIGHT_CLICK_EXIT, keep_on_top=True, resizable=True)
+    window2 = sg.Window('Table of XML-Input', layout, finalize=True, right_click_menu=sg.MENU_RIGHT_CLICK_EXIT, keep_on_top=True, resizable=True)
 
-    return window
+    while True:
+      event, values = window2.read()
+      if event == sg.WIN_CLOSED or event == 'Exit':
+        break
+    window2.close()
 
 def main():
-  getXML()
-  parseXML()
-  xmltosql()
-  window = make_window()
-
-  while True:
-    event, values = window.read()
-    if event == sg.WIN_CLOSED or event == 'Exit':
-        break
-  window.close()
-  
+  get_xml_file_window()
+  #xmltosql()
+ 
 main()  
 
 
