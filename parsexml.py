@@ -22,8 +22,7 @@ def make_dpi_aware():
 #Store tags in taglist for the columns of the table and values in valuelist for the rows
 def parseXML():
     
-    mytree = ET.parse(xmldata)
-
+    global myroot
     myroot = mytree.getroot()
   
     global listofvaluelists
@@ -121,29 +120,24 @@ def get_xml_file_window():
               [sg.Input(key='-IN-'), sg.FileBrowse()],
               [sg.B('Show as table'), sg.B('Export to SQL-DB'), sg.B('Exit', key='Exit')]]
 
-    window1 = sg.Window('Get XML File', layout)
+    window = sg.Window('Get XML File', layout)
 
     while True:
-        event, values = window1.read()
+        event, values = window.read()
         if event in (sg.WINDOW_CLOSED, 'Exit'):
             break
         elif event == 'Show as table':
-            global xmldata
             xmldata = (values['-IN-'])
+            global mytree
             try:
               mytree = ET.parse(xmldata)
             except:
               error_window()
               return
             parseXML()
-            table_window()  
-        elif event == 'Export to SQL-DB':   
-            xmldata = (values['-IN-'])
-            try:
-              mytree = ET.parse(xmldata)
-            except:
-              error_window()
-              return
+            table_window()
+        elif event == 'Export to SQL-DB': 
+            xmldata = (values['-IN-']) 
             parseXML()
             xmltosql()
 
@@ -154,13 +148,13 @@ def table_window(theme=None):
     sg.theme(theme)
     sg.set_global_icon(icon = 'settings/xml.ico') if platform.system() == 'Windows' else sg.set_global_icon(base64.b64encode(open('settings/xml.png', 'rb').read())) 
     layout = [[sg.Table(listofvaluelists, taglist, num_rows=rows, justification=LEFT, expand_x=True, expand_y=True)]]
-    window2 = sg.Window('Table of XML-Input', layout, finalize=True, right_click_menu=sg.MENU_RIGHT_CLICK_EXIT, keep_on_top=True, resizable=True)
+    window = sg.Window('Table ' + myroot.tag, layout, finalize=True, right_click_menu=sg.MENU_RIGHT_CLICK_EXIT, keep_on_top=True, resizable=True)
 
     while True:
-      event, values = window2.read()
+      event, values = window.read()
       if event == sg.WIN_CLOSED or event == 'Exit':
         break
-    window2.close()
+    window.close()
 
 def main():
   get_xml_file_window()
